@@ -7,7 +7,8 @@ def test_decline_taxonomy_covers_every_failed_authorization_attempt() -> None:
     connection = build_warehouse()
 
     failed_attempts = connection.execute(
-        "select count(*) from fact_authorization where disposition in ('declined', 'timed_out')"
+        "select count(*) from fact_authorization "
+        "where disposition in ('declined', 'timed_out')"
     ).fetchone()[0]
     classified_attempts = connection.execute(
         "select coalesce(sum(decline_attempts), 0) from mart_decline_daily"
@@ -20,7 +21,12 @@ def test_decline_taxonomy_covers_every_failed_authorization_attempt() -> None:
     }
 
     assert classified_attempts == failed_attempts
-    assert reasons <= {"insufficient_funds", "do_not_honor", "network_timeout", "other_decline"}
+    assert reasons <= {
+        "insufficient_funds",
+        "do_not_honor",
+        "network_timeout",
+        "other_decline",
+    }
     assert "network_timeout" in reasons
 
 
@@ -83,12 +89,17 @@ def test_executive_summary_is_measured_from_atomic_facts() -> None:
     connection = build_warehouse()
     summary = build_executive_summary(connection)
 
-    assert summary.payments == connection.execute("select count(*) from fact_payment").fetchone()[0]
-    assert summary.authorization_attempts == connection.execute(
+    payment_count = connection.execute("select count(*) from fact_payment").fetchone()[0]
+    authorization_count = connection.execute(
         "select count(*) from fact_authorization"
     ).fetchone()[0]
-    assert summary.reversals == connection.execute("select count(*) from fact_reversal").fetchone()[0]
+    reversal_count = connection.execute("select count(*) from fact_reversal").fetchone()[0]
+
+    assert summary.payments == payment_count
+    assert summary.authorization_attempts == authorization_count
+    assert summary.reversals == reversal_count
+    assert summary.data_scope == "synthetic"
     assert 0 <= summary.approval_rate <= 1
     assert 0 <= summary.timeout_rate <= 1
     assert len(summary.findings()) == 5
-    assert all("synthetic" not in finding.lower() for finding in summary.findings())
+    assert all("synthetic scenario" in finding.lower() for finding in summary.findings())
