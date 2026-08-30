@@ -7,8 +7,7 @@ def test_decline_taxonomy_covers_every_failed_authorization_attempt() -> None:
     connection = build_warehouse()
 
     failed_attempts = connection.execute(
-        "select count(*) from fact_authorization "
-        "where disposition in ('declined', 'timed_out')"
+        "select count(*) from fact_authorization where disposition in ('declined', 'timed_out')"
     ).fetchone()[0]
     classified_attempts = connection.execute(
         "select coalesce(sum(decline_attempts), 0) from mart_decline_daily"
@@ -90,9 +89,9 @@ def test_executive_summary_is_measured_from_atomic_facts() -> None:
     summary = build_executive_summary(connection)
 
     payment_count = connection.execute("select count(*) from fact_payment").fetchone()[0]
-    authorization_count = connection.execute(
-        "select count(*) from fact_authorization"
-    ).fetchone()[0]
+    authorization_count = connection.execute("select count(*) from fact_authorization").fetchone()[
+        0
+    ]
     reversal_count = connection.execute("select count(*) from fact_reversal").fetchone()[0]
 
     assert summary.payments == payment_count
