@@ -12,7 +12,7 @@ select
         else 'other_decline'
     end as decline_reason,
     count(*) as decline_attempts,
-    sum(p.amount_minor) as affected_payment_amount_minor
+    sum(p.amount_minor) as attempted_amount_minor
 from fact_authorization a
 join fact_payment p using (payment_id)
 join dim_issuer i using (issuer_id)
