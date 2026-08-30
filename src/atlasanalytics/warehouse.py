@@ -4,8 +4,7 @@ from pathlib import Path
 
 import duckdb
 
-from .synthetic import SyntheticDataset, generate_synthetic_dataset
-
+from atlasanalytics.synthetic import SyntheticDataset, generate_synthetic_dataset
 
 ROOT = Path(__file__).resolve().parents[2]
 SQL_DIR = ROOT / "sql"
