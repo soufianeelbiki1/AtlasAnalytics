@@ -42,11 +42,14 @@ def test_daily_mart_reconciles_to_atomic_facts() -> None:
 
     assert mart_payments == fact_payments
     assert mart_authorizations == fact_authorizations
-    assert scalar(
-        connection,
-        "select count(*) from mart_payment_daily "
-        "where authorization_approval_rate < 0 or authorization_approval_rate > 1",
-    ) == 0
+    assert (
+        scalar(
+            connection,
+            "select count(*) from mart_payment_daily "
+            "where authorization_approval_rate < 0 or authorization_approval_rate > 1",
+        )
+        == 0
+    )
 
 
 def test_retry_attempt_does_not_double_count_payment_amount() -> None:
@@ -88,9 +91,7 @@ def test_retry_attempt_does_not_double_count_payment_amount() -> None:
 def test_reconciliation_exceptions_are_explicit_not_hidden() -> None:
     connection = build_warehouse()
 
-    exceptions = scalar(
-        connection, "select sum(reconciliation_exceptions) from mart_payment_daily"
-    )
+    exceptions = scalar(connection, "select sum(reconciliation_exceptions) from mart_payment_daily")
     discrepancy = scalar(
         connection, "select sum(reconciliation_discrepancy_minor) from mart_payment_daily"
     )
