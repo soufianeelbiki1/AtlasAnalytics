@@ -16,24 +16,29 @@ class ExecutiveSummary:
     reversals: int
     reconciliation_exceptions: int
     issuer_anomalies: int
+    data_scope: str = "synthetic"
 
     def findings(self) -> list[str]:
+        prefix = "Synthetic scenario:"
         return [
             (
-                f"Authorization approval rate is {self.approval_rate:.1%} across "
+                f"{prefix} authorization approval rate is {self.approval_rate:.1%} across "
                 f"{self.authorization_attempts:,} attempts."
             ),
-            f"Timeout rate is {self.timeout_rate:.1%}; {self.reversals:,} reversals were recorded.",
             (
-                f"Captured amount is {self.captured_amount_minor:,} minor units from "
+                f"{prefix} timeout rate is {self.timeout_rate:.1%}; "
+                f"{self.reversals:,} reversals were recorded."
+            ),
+            (
+                f"{prefix} captured amount is {self.captured_amount_minor:,} minor units from "
                 f"{self.requested_amount_minor:,} requested minor units."
             ),
             (
-                f"Reconciliation surfaced {self.reconciliation_exceptions:,} exception days; "
-                "exceptions are not silently netted away."
+                f"{prefix} reconciliation surfaced {self.reconciliation_exceptions:,} "
+                "exception days; exceptions are not silently netted away."
             ),
             (
-                f"Rolling issuer baselines currently flag {self.issuer_anomalies:,} "
+                f"{prefix} rolling issuer baselines flag {self.issuer_anomalies:,} "
                 "issuer-day observations for investigation or critical review."
             ),
         ]
