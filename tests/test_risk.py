@@ -65,7 +65,11 @@ def test_threshold_selection_minimizes_declared_cost_model() -> None:
         false_positive_cost_minor=100,
     )
     costs = [
-        evaluate_threshold(observations, threshold, false_positive_cost_minor=100).expected_cost_minor
+        evaluate_threshold(
+            observations,
+            threshold,
+            false_positive_cost_minor=100,
+        ).expected_cost_minor
         for threshold in thresholds
     ]
 
