@@ -6,6 +6,7 @@ from pathlib import Path
 
 from atlasanalytics.risk import (
     RiskObservation,
+    ThresholdMetrics,
     calibration_bins,
     evaluate_threshold,
     population_stability_index,
@@ -97,6 +98,20 @@ def _risk_counts(observations: list[RiskObservation]) -> tuple[int, int, float]:
     return total, frauds, rate
 
 
+def _threshold_row(metric: ThresholdMetrics, selected_threshold: float) -> str:
+    row_class = ' class="best"' if metric.threshold == selected_threshold else ""
+    return (
+        f"<tr{row_class}>"
+        f"<td>{metric.threshold:.2f}</td>"
+        f"<td>{_percent(metric.precision)}</td>"
+        f"<td>{_percent(metric.recall)}</td>"
+        f"<td>{_percent(metric.false_positive_rate)}</td>"
+        f"<td>{_percent(metric.alert_rate)}</td>"
+        f"<td>{_money_minor(metric.expected_cost_minor)}</td>"
+        "</tr>"
+    )
+
+
 def build_risk_report_html(
     observations: list[RiskObservation] | None = None,
 ) -> str:
@@ -115,15 +130,7 @@ def build_risk_report_html(
     holdout_total, holdout_frauds, holdout_rate = _risk_counts(holdout)
 
     threshold_html = "".join(
-        "<tr class=\"best\">" if metric.threshold == selected.threshold else "<tr>"
-        + f"<td>{metric.threshold:.2f}</td>"
-        + f"<td>{_percent(metric.precision)}</td>"
-        + f"<td>{_percent(metric.recall)}</td>"
-        + f"<td>{_percent(metric.false_positive_rate)}</td>"
-        + f"<td>{_percent(metric.alert_rate)}</td>"
-        + f"<td>{_money_minor(metric.expected_cost_minor)}</td>"
-        + "</tr>"
-        for metric in threshold_rows
+        _threshold_row(metric, selected.threshold) for metric in threshold_rows
     )
 
     calibration_html = "".join(
@@ -144,16 +151,19 @@ def build_risk_report_html(
     for row in holdout:
         issuer_counts[row.issuer_id] = issuer_counts.get(row.issuer_id, 0) + 1
     max_issuer = max(issuer_counts.values(), default=0)
-    issuer_html = "".join(
-        '<div class="bar-row">'
-        f"<span>{escape(issuer)}</span>"
-        '<div class="bar-track">'
-        f'<div class="bar" style="width:{(count / max_issuer * 100) if max_issuer else 0:.1f}%"></div>'
-        "</div>"
-        f"<strong>{count}</strong>"
-        "</div>"
-        for issuer, count in sorted(issuer_counts.items())
-    )
+    issuer_html_parts: list[str] = []
+    for issuer, count in sorted(issuer_counts.items()):
+        width = count / max_issuer * 100 if max_issuer else 0
+        issuer_html_parts.append(
+            '<div class="bar-row">'
+            f"<span>{escape(issuer)}</span>"
+            '<div class="bar-track">'
+            f'<div class="bar" style="width:{width:.1f}%"></div>'
+            "</div>"
+            f"<strong>{count}</strong>"
+            "</div>"
+        )
+    issuer_html = "".join(issuer_html_parts)
 
     return f"""<!doctype html>
 <html lang="en">
