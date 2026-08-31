@@ -147,6 +147,22 @@ def calibration_bins(
     return bins
 
 
+def _bin_share(
+    values: list[float],
+    lower: float,
+    upper: float,
+    *,
+    include_upper: bool,
+    epsilon: float,
+) -> float:
+    count = sum(
+        1
+        for value in values
+        if lower <= value < upper or (include_upper and value == upper)
+    )
+    return max(count / len(values), epsilon)
+
+
 def population_stability_index(
     reference_scores: list[float],
     current_scores: list[float],
@@ -167,16 +183,20 @@ def population_stability_index(
     for index in range(bin_count):
         lower = index / bin_count
         upper = (index + 1) / bin_count
-
-        def share(values: list[float]) -> float:
-            count = sum(
-                1
-                for value in values
-                if lower <= value < upper or (index == bin_count - 1 and value == 1)
-            )
-            return max(count / len(values), epsilon)
-
-        reference_share = share(reference_scores)
-        current_share = share(current_scores)
+        include_upper = index == bin_count - 1
+        reference_share = _bin_share(
+            reference_scores,
+            lower,
+            upper,
+            include_upper=include_upper,
+            epsilon=epsilon,
+        )
+        current_share = _bin_share(
+            current_scores,
+            lower,
+            upper,
+            include_upper=include_upper,
+            epsilon=epsilon,
+        )
         psi += (current_share - reference_share) * log(current_share / reference_share)
     return psi
