@@ -156,9 +156,7 @@ def _bin_share(
     epsilon: float,
 ) -> float:
     count = sum(
-        1
-        for value in values
-        if lower <= value < upper or (include_upper and value == upper)
+        1 for value in values if lower <= value < upper or (include_upper and value == upper)
     )
     return max(count / len(values), epsilon)
 
