@@ -15,24 +15,42 @@ Current marts cover daily payment activity, issuer performance, decline categori
 
 ## Operations dashboard
 
-The repository can generate a standalone HTML dashboard directly from the DuckDB warehouse:
+Generate a standalone HTML dashboard directly from the DuckDB warehouse:
 
 ```bash
 python -m atlasanalytics.dashboard --output build/atlasanalytics-dashboard.html
 ```
 
-Open the generated file in a browser. It includes:
+It includes:
 
 - authorization attempts, approval rate, timeout rate and overall p95 latency;
 - issuer performance by currency;
 - decline-reason distribution;
 - rolling issuer anomaly signals with approval/timeout z-scores.
 
-The HTML contains its CSS and does not require a web server. Values are regenerated from the deterministic synthetic warehouse rather than copied into a static mockup. The dashboard labels the data as synthetic and describes anomaly signals as diagnostics rather than proof of an outage.
+The HTML contains its CSS and does not require a dashboard server. Values are regenerated from the deterministic synthetic warehouse rather than copied into a static mockup.
 
-## Risk evaluation
+## Risk evaluation report
 
-The risk module provides a leakage-safe evaluation path for scored transactions:
+Generate the visual risk report with:
+
+```bash
+python -m atlasanalytics.risk_report --output build/atlasanalytics-risk.html
+```
+
+The report uses a deterministic scored scenario and a chronological holdout. It shows:
+
+- precision, recall, false-positive rate and alert rate across thresholds;
+- the operating point selected by the declared amount-sensitive cost function;
+- score-band calibration against observed synthetic fraud rate;
+- Population Stability Index (PSI) between the reference period and holdout;
+- issuer mix for basic segment context.
+
+The synthetic scenario intentionally contains a mild late-period score shift so the PSI monitoring path is exercised. Cost values are assumptions, and PSI is a distribution-change signal rather than proof that a real model degraded.
+
+## Risk evaluation API
+
+The underlying risk module can also be used independently:
 
 - chronological train/test splitting;
 - precision, recall, false-positive rate and alert rate;
@@ -41,11 +59,11 @@ The risk module provides a leakage-safe evaluation path for scored transactions:
 - calibration bins;
 - Population Stability Index (PSI) for score-distribution monitoring.
 
-This is evaluation tooling, not a deployed fraud model. Cost values are assumptions and PSI is treated as a monitoring signal rather than proof of model failure.
+This is evaluation tooling, not a deployed fraud model.
 
 ## Synthetic data
 
-The repository generates its own payment data for repeatable tests and analysis. It contains no real PANs, cardholders, merchants or production AtlasPay transactions.
+The repository generates its own payment and scored-risk data for repeatable tests and analysis. It contains no real PANs, cardholders, merchants or production AtlasPay transactions.
 
 ## Example
 
@@ -75,6 +93,7 @@ ruff check .
 ruff format --check .
 pytest -q
 python -m atlasanalytics.dashboard --output build/atlasanalytics-dashboard.html
+python -m atlasanalytics.risk_report --output build/atlasanalytics-risk.html
 ```
 
 CI runs on Python 3.11 and 3.12.
@@ -87,6 +106,5 @@ CI runs on Python 3.11 and 3.12.
 
 - add date, merchant and channel dimensions;
 - add lifecycle/cohort analysis and traffic-weighted rolling baselines;
-- add a temporal holdout risk report with precision-recall and expected-cost curves;
-- extend the dashboard with risk threshold, calibration and PSI panels;
-- add an analyst investigation queue and segment-level monitoring.
+- add an analyst investigation queue and segment-level monitoring;
+- add threshold and calibration breakdowns by issuer/channel after those dimensions are modeled.
