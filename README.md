@@ -13,6 +13,23 @@ The warehouse separates payments from authorization attempts, reversals and reco
 
 Current marts cover daily payment activity, issuer performance, decline categories, rolling issuer baselines and reconciliation exceptions.
 
+## Operations dashboard
+
+The repository can generate a standalone HTML dashboard directly from the DuckDB warehouse:
+
+```bash
+python -m atlasanalytics.dashboard --output build/atlasanalytics-dashboard.html
+```
+
+Open the generated file in a browser. It includes:
+
+- authorization attempts, approval rate, timeout rate and overall p95 latency;
+- issuer performance by currency;
+- decline-reason distribution;
+- rolling issuer anomaly signals with approval/timeout z-scores.
+
+The HTML contains its CSS and does not require a web server. Values are regenerated from the deterministic synthetic warehouse rather than copied into a static mockup. The dashboard labels the data as synthetic and describes anomaly signals as diagnostics rather than proof of an outage.
+
 ## Risk evaluation
 
 The risk module provides a leakage-safe evaluation path for scored transactions:
@@ -57,6 +74,7 @@ python -m pip install -e '.[dev]'
 ruff check .
 ruff format --check .
 pytest -q
+python -m atlasanalytics.dashboard --output build/atlasanalytics-dashboard.html
 ```
 
 CI runs on Python 3.11 and 3.12.
@@ -69,6 +87,6 @@ CI runs on Python 3.11 and 3.12.
 
 - add date, merchant and channel dimensions;
 - add lifecycle/cohort analysis and traffic-weighted rolling baselines;
-- generate a temporal holdout risk report with precision-recall and expected-cost curves;
-- add an operations/risk dashboard backed directly by the DuckDB warehouse;
+- add a temporal holdout risk report with precision-recall and expected-cost curves;
+- extend the dashboard with risk threshold, calibration and PSI panels;
 - add an analyst investigation queue and segment-level monitoring.
